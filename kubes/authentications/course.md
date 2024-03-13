@@ -116,3 +116,62 @@ create a rolebinding, then add it to kubernetes clutser with `kubectl create -f 
 Then get the rolebining. `kubectl -n lfs158 get rolebinding`
 
 Then we can successfully list pods from new context bob-context
+
+### Admission control
+
+In a nutshell : 
+
+> An admission controller is a piece of code that intercepts requests to the Kubernetes API server prior to persistence of the object, but after the request is authenticated and authorized.
+> -- kubernetes.io
+
+#### Default admission controllers in a minikube env
+
+how to get it :
+```bash
+kubectl -n kube-system describe pod kube-apiserver-minikube | awk -F '=' '$1 ~ /admission {print $2}'
+```
+- NamespaceLifecycle
+- LimitRanger
+- ServiceAccount
+- DefaultStorageClass
+- DefaultTolerationSeconds
+- NodeRestriction
+- MutatingAdmissionWebhook
+- ValidatingAdmissionWebhook
+- ResourceQuota
+
+#### how to change pull policy
+
+First off, if you're using minikube, connect to it. 
+
+```bash
+minikube ssh
+```
+
+then check if `AlwaysPullImages` is already there
+
+```bash
+sudo grep AlwaysPullImages /etc/kubernetes/manifest/kube-apiserver.yaml
+```
+
+make a backup for `kube-apiserver.yaml`
+
+```bash
+sudo cp /etc/kubernetes/manifest/kube-apiserver.yaml /kube-apiser.yaml.backup
+```
+
+then add `AlwaysPullImages` in `kube-apiserver.yaml` in `--enable-admission-plugin` flag of kube-apiserver file. 
+
+finally, exit minikube, and wait for kube culter to reload.
+
+check if everything worked by getting all pods. 
+
+
+
+#### references:
+
+- [reference to admission controller in documentation](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/)
+- [list of admission controllers](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#what-does-each-admission-controller-do)
+- [dynamic admission control](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/)
+
+
